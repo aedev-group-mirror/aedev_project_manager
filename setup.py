@@ -1,4 +1,4 @@
-# THIS FILE IS EXCLUSIVELY MAINTAINED by the project aedev.project_tpls v0.3.104
+# THIS FILE IS EXCLUSIVELY MAINTAINED by the project aedev.project_tpls v0.3.105
 """ setup of aedev namespace package portion project_manager: maintain Python projects locally and remotely. """
 import pathlib
 import sys
@@ -30,8 +30,8 @@ setup_kwargs: dict[str, Any] = {
     },
     'extras_require': {
         'dev': [
-            'aedev_project_tpls==0.3.104',
-            'aedev_aedev==0.3.34',
+            'aedev_project_tpls==0.3.105',
+            'aedev_aedev==0.3.35',
             'ae_app_log==0.3.4',
             'ae_base==0.3.97',
             'ae_console==0.3.98',
@@ -48,7 +48,7 @@ setup_kwargs: dict[str, Any] = {
             'ae_updater==0.3.20',
             'aedev_app_tpls==0.3.22',
             'aedev_base==0.3.12',
-            'aedev_commands==0.3.19',
+            'aedev_commands==0.3.20',
             'aedev_namespace_root_tpls==0.3.33',
             'aedev_project_vars==0.3.25',
             'alabaster==1.0.0',
@@ -97,7 +97,7 @@ setup_kwargs: dict[str, Any] = {
             'PyNaCl==1.6.2',
             'pytest==9.1.1',
             'pytest-cov==7.1.0',
-            'python-gitlab==8.5.0',
+            'python-gitlab==8.6.0',
             'requests==2.34.2',
             'requests-toolbelt==1.0.0',
             'roman-numerals==4.1.0',
@@ -155,7 +155,7 @@ setup_kwargs: dict[str, Any] = {
         'pylint==4.0.9',
         'pytest==9.1.1',
         'pytest-cov==7.1.0',
-        'python-gitlab==8.5.0',
+        'python-gitlab==8.6.0',
         'requests==2.34.2',
         'ae_base==0.3.97',
         'ae_system==0.3.20',
@@ -169,7 +169,7 @@ setup_kwargs: dict[str, Any] = {
         'ae_managed_files==0.3.9',
         'ae_pythonanywhere==0.3.10',
         'aedev_base==0.3.12',
-        'aedev_commands==0.3.19',
+        'aedev_commands==0.3.20',
         'aedev_project_vars==0.3.25',
     ],
     'keywords': [
@@ -196,7 +196,7 @@ setup_kwargs: dict[str, Any] = {
     },
     'python_requires': '>=3.12',
     'url': 'https://gitlab.com/aedev-group/aedev_project_manager',
-    'version': '0.3.42',
+    'version': '0.3.43',
     'zip_safe': True,
 }
 
