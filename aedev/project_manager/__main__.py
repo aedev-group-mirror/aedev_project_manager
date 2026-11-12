@@ -24,8 +24,8 @@ external helpers dependencies
 
 helper functions to categorize and maintain project attributes are provided by the two external
 module :mod:`aedev.commands` and :mod:`aedev.project_vars`, portions of the ``aedev`` namespace.
-helper functions provided by the :mod:`aedev.commands` encapsulate ``git`` and ``pip`` commands.
-:func:`~aedev.project_vars.increment_version`, :func:`~aedev.project_vars.latest_remote_version` or
+helper functions provided by the :mod:`aedev.commands` module are providing ``git`` and ``pip`` commands.
+the functions :func:`~aedev.project_vars.increment_version`, :func:`~aedev.project_vars.latest_remote_version` or
 :func:`~aedev.project_vars.replace_file_version` are used by this module to determine or manipulate
 the local/remote/released versions of your projects.
 
@@ -37,7 +37,7 @@ to generate managed project files from the `aedev.*_tpls` template projects
 in the :func:`add_file` action and in the functions :func:`~aedev.project_manager.templates.check_templates`
 and :func:`~ae.managed_files.deploy_template`.
 
-the portion :mod:`ae.pythonanywhere` portion encapsulates the web API to deploy Django web applications
+the :mod:`ae.pythonanywhere` portion encapsulates the web API to deploy Django web applications
 to the Pythonanywhere webserver.
 """
 # pylint: disable=too-many-lines
@@ -397,6 +397,7 @@ def _check_code_pylint(pdv: ProjectDevVars, path_args: tuple[str, ...]):
         write_file(os_path_join(".pylint", "pylint.log"), os.linesep.join(out))
         score = matcher.group(1) if matcher else "<undetermined>"
 
+        # noinspection bad-argument-type
         badge = Badge("Pylint", score, thresholds={6: 'orange', 9: 'yellow', 10: 'green'}, default_color='red')
         badge.write_badge(".pylint/pylint.svg", overwrite=True)
 
@@ -435,6 +436,7 @@ def _check_code_pytest(pdv: ProjectDevVars, path_args: tuple[str, ...]):
         except (FileNotFoundError, KeyError, ValueError, Exception) as ex:      # pylint: disable=broad-exception-caught
             per = "?"
             msg = f"undetermined {ex=}"
+        # noinspection bad-argument-type
         badge = Badge("coverage", per, value_suffix="%", thresholds={60: 'orange', 100: 'green'}, default_color='red')
         badge.write_badge(".pytest_cache/coverage.svg", overwrite=True)
         # alternative to Badge: use img.shields.io to generate badge/SVG via (from urllib.request import urlopen):
@@ -465,11 +467,13 @@ def _check_or_install_outdated_reqs(pdv: ProjectDevVars, check_only: bool):
                       + pdv.pdv_val('install_requires')
                       + pdv.pdv_val('tests_requires')))
     for pkg in all_reqs:
+        # noinspection bad-argument-type
         if any(fnmatchcase(stripped_pip_name(pkg), _mask) for _mask in hot_masks):
             hot_reqs.add(pkg)
         else:
             cool_reqs.add(pkg)
     if verbose:
+        # noinspection bad-argument-type
         cae.po(f"  --- found {len(all_reqs)} required PyPI projects"
                + (f" (cooled-down={len(cool_reqs)} hot={len(hot_reqs)})" if period and not cae.debug else "")
                + f":{ppp(all_reqs)}")
@@ -535,7 +539,6 @@ def _check_resources_img(pdv: ProjectDevVars) -> list[str]:
     for name, files in local_images.items():
         for file_name in (norm_path(str(file)) for file in files):
             cae.chk(69, bool(read_bin_file(file_name)), f"empty image resource in {file_name}")
-            # noinspection PyBroadException
             try:
                 img = Image.open(file_name)
                 img.verify()
@@ -728,6 +731,7 @@ def _init_act_args_check(ini_pdv: ProjectDevVars, act_spec: Any, act_name: str, 
         for act_arg in act_args[:]:
             if (bool_flag := act_arg == flag_name) or act_arg.startswith(flag_name + '='):
                 flag_val = True if bool_flag else Literal(act_arg[val_pos:]).value
+                # noinspection string-conversion-without-dunder-method
                 cae.chk(9, isinstance(flag_val, flag_type),
                         f"command line flag {flag_name} has invalid type '{type(flag_val)}', expected '{flag_type}'")
                 act_flags[flag_name] = flag_val
@@ -871,7 +875,6 @@ def _init_children_pdv_args(ini_pdv: ProjectDevVars, act_args: ActionArgs) -> li
 
 def _init_children_presets(ini_pdv: ProjectDevVars, chi_vars: ChildrenType) -> dict[str, set[str]]:
     branch = get_app_option(ini_pdv, 'filterBranch')
-    # noinspection PyTypeChecker
     expr: str = cast(str, get_app_option(ini_pdv, 'filterExpression'))
 
     chi_ps: dict[str, set[str]] = {}
@@ -949,8 +952,7 @@ def _print_pdv(pdv: ProjectDevVars):
         if 'long_desc_content' in pdv:
             pdv['long_desc_content'] = skw['long_description'] = pdv['long_desc_content'][:33] + "..."
         pdv['package_data'] = ", ".join(pdv.pdv_val('package_data'))
-        pdv['portions_packages'] = ", ".join(_pkg[nsp_len:] for _pkg in sorted(cast(list[str],
-                                                                                    pdv.pdv_val('portions_packages'))))
+        pdv['portions_packages'] = ", ".join(sorted(_pkg[nsp_len:] for _pkg in pdv.pdv_val('portions_packages')))
         pdv['project_packages'] = ", ".join(pdv.pdv_val('project_packages'))
         pdv['tests_requires'] = ", ".join(pdv.pdv_val('tests_requires'))
 
@@ -1080,6 +1082,7 @@ def _renew_local_root_req_file(pdv: ProjectDevVars):
         req_content = ""
 
     sep = os.linesep
+    # noinspection bad-argument-type
     if not _required_package(project_name, req_content.split(sep)):
         if req_content and not req_content.endswith(sep):
             req_content += sep
@@ -1151,7 +1154,7 @@ def _show_remote_gitlab(prj_instance: Project, branch: str = "") -> bool:
 
     if branch:
         mrs = prj_instance.mergerequests.list(source_branch=branch, state='opened', get_all=False)
-        if mrs:
+        if mrs and isinstance(mrs, list):
             cae.po(f"✅   - an open Merge Request (with the ID {mrs[0].iid}) already exists for {branch=} at remote")
         elif verbose:
             cae.po(f"    - no open Merge Request found for the {branch=} found at remote")
@@ -1342,7 +1345,6 @@ def _update_project(ini_pdv: ProjectDevVars, remote_names: Container[str] = (), 
 
 
 def _wait(pdv: ProjectDevVars):
-    # noinspection PyUnnecessaryCast
     wait_seconds = float(cast(str | int | float, get_app_option(pdv, 'delay')))
     cae.po(f"    . waiting {wait_seconds} seconds")
     time.sleep(wait_seconds)
@@ -1693,6 +1695,7 @@ class GitlabCom(RemoteHost):    # pragma: no cover
         """
         group_repo = f"{get_host_group(ini_pdv, get_host_domain(ini_pdv))}/{ini_pdv['project_name']}"
         project = self.repo_obj(95, group_repo)
+        # noinspection bad-return
         return [] if project is None else project.mergerequests.list(source_branch=branch)
 
     def connect(self, ini_pdv: ProjectDevVars) -> bool:
@@ -2456,8 +2459,8 @@ class PythonanywhereCom(RemoteHost):        # pragma: no cover
                                   deleted files in the specified repository.
                                 * ``CLEANUP`` is checking for deletable files on the web server/host, e.g., after
                                   they got removed from the specified repository or work tree.
-                                * ``LEAN`` is reducing the deployable files sets to the minimum (using e.g., the
-                                  function :func:`skip_files_lean_web`), like e.g., the gettext ``.po`` files,
+                                * ``LEAN`` is reducing the deployable files sets to the minimum (using the
+                                  function :func:`skip_files_lean_web`). this excludes the gettext ``.po`` files,
                                   the ``media_ini`` root folder and the ``static`` subfolder with the initial static
                                   files of the web project.
                                 * ``MASKS`` specifies a list of file paths masks/pattern to be included in the
@@ -3262,6 +3265,7 @@ def update_mirror(ini_pdv: ProjectDevVars, mirror_remote: str):
     if hostname == 'codeberg.org':
         group_project = owner_project_from_url(mirror_url)
         usr_or_org, repo_name = group_project.split("/", maxsplit=1)
+        # noinspection bad-argument-type
         err_msg = ensure_repo(usr_or_org, repo_name, token, desc=project_desc)
         cae.chk(74, not err_msg, f"codeberg repository check failed: {err_msg}")
         ini_rep = partial(set_main_branch, usr_or_org, repo_name, token, ini_pdv['MAIN_BRANCH'])
@@ -3398,8 +3402,10 @@ def prepare_and_run_main():
         act_name, act_args, act_flags = _init_act_exec_args(ini_pdv)  # init globals, check action, compile args
         host_api = ini_pdv.pdv_val('host_api')                      # determine optional host API client instance
         action_callable = _act_callable(host_api, act_name)         # determine action function|method
-
-        action_callable(ini_pdv, *act_args, **act_flags)            # execute action
+        if action_callable is None:
+            cae.po(f"***** invalid {act_name=} for {host_api=}; `pjm show_actions` displays all the supported actions.")
+        else:
+            action_callable(ini_pdv, *act_args, **act_flags)            # execute action
 
     if not cae.verbose:                                             # if not in verbose debug mode then
         temp_context_cleanup()                                      # cleanup default context and git clone context

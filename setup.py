@@ -32,7 +32,7 @@ setup_kwargs: dict[str, Any] = {
         'dev': [
             'aedev_project_tpls==0.3.109',
             'aedev_aedev==0.3.36',
-            'ae_app_log==0.3.4',
+            'ae_app_log==0.4.4',
             'ae_base==0.4.98',
             'ae_console==0.3.99',
             'ae_core==0.3.90',
@@ -53,7 +53,7 @@ setup_kwargs: dict[str, Any] = {
             'aedev_namespace_root_tpls==0.3.35',
             'aedev_project_vars==0.3.27',
             'alabaster==1.0.0',
-            'anybadge==1.16.0',
+            'anybadge==1.18.0',
             'argcomplete==3.7.2',
             'ast_serialize==0.13.0',
             'astroid==4.3.4',
@@ -136,7 +136,7 @@ setup_kwargs: dict[str, Any] = {
             'typing_extensions==4.16.0',
             'urllib3==2.7.0',
             'userpath==1.9.2',
-            'anybadge==1.16.0',
+            'anybadge==1.18.0',
             'flake8==7.5.0',
             'mypy==2.4.1',
             'pylint==4.1.3',
@@ -147,7 +147,7 @@ setup_kwargs: dict[str, Any] = {
         ],
         'docs': [],
         'tests': [
-            'anybadge==1.16.0',
+            'anybadge==1.18.0',
             'flake8==7.5.0',
             'mypy==2.4.1',
             'pylint==4.1.3',
@@ -158,7 +158,7 @@ setup_kwargs: dict[str, Any] = {
         ],
     },
     'install_requires': [
-        'anybadge==1.16.0',
+        'anybadge==1.18.0',
         'coverage==7.17.2',
         'flake8==7.5.0',
         'mypy==2.4.1',
@@ -209,7 +209,7 @@ setup_kwargs: dict[str, Any] = {
     },
     'python_requires': '>=3.12',
     'url': 'https://gitlab.com/aedev-group/aedev_project_manager',
-    'version': '0.4.44',
+    'version': '0.4.45',
     'zip_safe': True,
 }
 

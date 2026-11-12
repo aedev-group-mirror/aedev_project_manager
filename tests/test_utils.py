@@ -1104,7 +1104,7 @@ class TestOtherHelpers:
 
         assert imp == {'fake.sub', 'imp.pkg'} | ({'dj.app'} if dbg else set())
         output = capsys.readouterr().out
-        assert ("!! project imports/dependencies:" if dbg else "## Django apps dependencies NOT found") in output
+        assert ("!! project imports/dependencies " if dbg else "## Django apps dependencies NOT found") in output
 
     def test_imported_modules(self):
         assert isinstance(imported_modules("Invalid:NotExisting:CodeFile"), str)

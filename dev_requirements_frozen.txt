@@ -1,7 +1,7 @@
 aedev_project_tpls==0.3.109
 aedev_aedev==0.3.36
 ## The following requirements were added by pip freeze:
-ae_app_log==0.3.4
+ae_app_log==0.4.4
 ae_base==0.4.98
 ae_console==0.3.99
 ae_core==0.3.90
@@ -22,7 +22,7 @@ aedev_commands==0.3.21
 aedev_namespace_root_tpls==0.3.35
 aedev_project_vars==0.3.27
 alabaster==1.0.0
-anybadge==1.16.0
+anybadge==1.18.0
 argcomplete==3.7.2
 ast_serialize==0.13.0
 astroid==4.3.4

@@ -460,7 +460,7 @@ def import_dependencies(cae: ConsoleApp, project_path: str, project_type: str, i
                                 extension found underneath the specified :paramref:`.project_path`.
                                 specifying e.g. the tuple `(DOCS_FOLDER + "/", )` would exclude the import dependencies
                                 of all the code files underneath the docs folder (like for example `conf.py`).
-    :return:                    set of imported package/project names.
+    :return:                    set of import/module names imported by the specified project.
     """
     import_deps: set[str] = set()
     for code_file in package_code_files(project_path, exclude_prefixes=exclude_prefixes):
@@ -474,7 +474,7 @@ def import_dependencies(cae: ConsoleApp, project_path: str, project_type: str, i
                                           validator=lambda _val: isinstance(_val, list)):
             # noinspection PyTypeChecker
             import_deps.update(set(dj_deps))
-            cae.dpo(f"   !! project imports/dependencies: {import_deps}")
+            cae.dpo(f"   !! project imports/dependencies module/import names: {import_deps}")
         else:
             cae.po(f"   ## Django apps dependencies NOT found at {project_path}/{import_name}/settings.py;  {dj_deps=}")
 
@@ -514,9 +514,9 @@ def installed_packages(cae: ConsoleApp, project_path: str) -> list[str]:
     installed: list[str] = []
     with in_prj_dir_venv(project_path=project_path):
         run_logged_cmd(24, PIP_CMD, "list", "--format=json", output_lines=installed)
-    cae.vpo(f"    ! installed pip packages (in json format): {installed}")
+    cae.vpo(f"    ! installed pip packages (in json format):{ppp(installed)}")
     installed = [norm_pip_name(_['name']) for _ in json.loads(installed[0])]
-    cae.dpo(f"   !! installed pip packages: {installed}")
+    cae.dpo(f"   !! installed pip packages:{ppp(installed)}")
     return installed
 
 
@@ -525,35 +525,33 @@ def missing_imports(cae: ConsoleApp, import_deps: set[str], project_reqs: list[s
     """ determine pip package names that are required but not explicitly imported by a project.
 
     :param cae:                 main app instance.
-    :param import_deps:         set of imported package/project names (determinable by :func:`import_dependencies`).
+    :param import_deps:         set of imported module/import names (determinable by :func:`import_dependencies`).
     :param project_reqs:        list of external package/project names, required by the project.
     :param ignore_extra_reqs:   list of packages names that will be returned in the returned as ignored.
-    :return:                    tuple of missing and missing&ignored import names.
+    :return:                    tuple of missing package/project/pip names and missing&ignored import names.
     """
-    import_names = {norm_pip_name(_pip_name): _imp_name for _imp_name, _pip_name in PYPI_PACKAGE_NAMES.items()}
-    cae.vpo(f"    ! irregular PyPI project names (not convertable from their import names): {import_names}")
+    perm_reqs = set()
+    for imp_name in import_deps:
+        norm_name_parts = imp_name.replace('_', '-').split('.')
+        for permutation_len in range(1, len(norm_name_parts) + 1):
+            perm_parts = norm_name_parts[:permutation_len]
+            pip_name = PYPI_PACKAGE_NAMES.get('.'.join(perm_parts), '-'.join(perm_parts))
+            perm_reqs.add(pip_name.lower())
+    cae.vpo(f"    ! compiled {len(perm_reqs)} permutations of dependencies project/pip names:{ppp(perm_reqs)}")
 
-    # from itertools import accumulate
-    # perm_deps={_pe for _dep in deps for _pe in accumulate(_dep.replace('_', '-').split('.'), lambda x, y: f"{x}-{y}")}
-    perm_deps = set()
-    for _dep_names in import_deps:
-        _parts = _dep_names.replace('_', '-').split('.')
-        for i in range(1, len(_parts) + 1):
-            perm_deps.add('-'.join(_parts[:i]))
-
-    cae.vpo(f"    ! permutations of dependencies import names: {perm_deps}")
     ignoring_reqs = [norm_pip_name(_pip_name) for _pip_name in ignore_extra_reqs]
-    cae.dpo(f"   !! ignored required PyPI projects that are not explicitly imported: {ignoring_reqs}")
+    cae.dpo(f"   !! ignored {len(ignoring_reqs)} required projects - not explicitly imported:{ppp(ignoring_reqs)}")
+
+    imp_names = {norm_pip_name(_pip_name): _imp_name for _imp_name, _pip_name in PYPI_PACKAGE_NAMES.items()}
+    cae.vpo(f"    ! compiled {len(imp_names)} irregular project names (not convertable import names):{ppp(imp_names)}")
     ignored_reqs = set()
     missed_imports = []
     for req_pkg in project_reqs:
-        if req_pkg in import_names:
-            req_pkg = import_names[req_pkg]
-        if req_pkg not in perm_deps:
-            if req_pkg in ignoring_reqs:
+        if req_pkg not in perm_reqs:
+            if req_pkg in ignoring_reqs or req_pkg.startswith('types-'):  # requests, setuptools, Pillow have types-prj
                 ignored_reqs.add(req_pkg)
             else:
-                missed_imports.append(req_pkg)
+                missed_imports.append(imp_names.get(req_pkg, req_pkg))
 
     return missed_imports, ignored_reqs
 
@@ -564,7 +562,7 @@ def missing_requirements(project_path: str, import_deps: set[str], venv_packages
     """ determine the import names of a local project repository that are not explicitly required.
 
     :param project_path:        root path of the local project repository.
-    :param import_deps:         set of imported package/project names (determinable by :func:`import_dependencies`).
+    :param import_deps:         set of imported module/import names (determinable by :func:`import_dependencies`).
     :param venv_packages:       list of installed pip packages/projects names (returned by :func:`installed_packages`).
     :param project_reqs:        list of external package/project names, required by the project.
     :param ignoring_imports:    list of external package/project import names that will be returned as missing&ignored.
@@ -578,26 +576,26 @@ def missing_requirements(project_path: str, import_deps: set[str], venv_packages
 
     def _in_packages(_packages: list[str], _current_imp_names: list[str], _current_pip_name: str) -> bool:
         return any(
-            norm_pip_name(_n) in _packages
-            or os_path_isfile(os_path_join(project_path, _n.replace('.', "/") + '.py'))
-            or os_path_isfile(os_path_join(project_path, _n.replace('.', "/"), '__init__' + '.py'))
-            or norm_pip_names.get(_n, _current_pip_name) in _packages
-            for _n in _current_imp_names)
+            norm_pip_name(_imp_name) in _packages
+            or os_path_isfile(os_path_join(project_path, _imp_name.replace('.', "/") + '.py'))
+            or os_path_isfile(os_path_join(project_path, _imp_name.replace('.', "/"), '__init__' + '.py'))
+            or norm_pip_names.get(_imp_name, _current_pip_name) in _packages
+            for _imp_name in _current_imp_names)
 
-    for imp_path in import_deps:
-        mod_obj = PyMo(imp_path)
+    for imp_name in import_deps:
+        mod_obj = PyMo(imp_name)
 
         name_parts = mod_obj.name_parts
         imp_names = ['.'.join(name_parts[:i]) for i in range(1, len(name_parts) + 1)]
 
         if not _in_packages(project_reqs, imp_names, mod_obj.pip_name):
-            if imp_path in ignoring_imports:
-                ignored_imports.add(imp_path)
+            if imp_name in ignoring_imports:
+                ignored_imports.add(imp_name)
             else:
-                missing_reqs.append(imp_path)
+                missing_reqs.append(imp_name)
 
         if not _in_packages(venv_packages, imp_names, mod_obj.pip_name):
-            uninstalled_packages.append(imp_path)
+            uninstalled_packages.append(imp_name)
 
     return missing_reqs, uninstalled_packages, ignored_imports
 
@@ -650,7 +648,7 @@ def refresh_pdv(pdv: ProjectDevVars):
 def renew_project_dir(pdv: ProjectDevVars):     # pylint: disable=too-many-branches
     """ create&complete a project or check&protocol which files and subfolders are missing.
 
-    .. note:: to check&protocol patch :func:`patchable_makedirs` and :func:`patchable_write_file` and log their calls.
+    .. note:: to check&protocol patch :func:`patchable_makedirs` and :func:`patchable_write_file`, and log their calls.
 
     :param pdv:                 project development variables.
     """
